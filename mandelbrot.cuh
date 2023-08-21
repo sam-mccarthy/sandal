@@ -1,8 +1,11 @@
 #ifndef PNGULUM_MANDELBROT_CUH
 #define PNGULUM_MANDELBROT_CUH
 
-
-class mandelbrot {
+class Mandelbrot {
+    Mandelbrot(int x, int y, int width, int height);
+    ~Mandelbrot();
+    void RenderSDL();
+private:
 
 };
 

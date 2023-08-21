@@ -1,13 +1,10 @@
-//
-// Created by stiit on 8/13/2023.
-//
-
 #ifndef PNGULUM_PENDULUM_CUH
 #define PNGULUM_PENDULUM_CUH
 
 class Pendulum {
 public:
     Pendulum(int size, float lowerBound, float upperBound);
+    ~Pendulum();
     void RenderVideo(int frames);
     void RenderSDL();
 private:
@@ -26,5 +23,17 @@ private:
 
     float* velocity1ptr;
     float* velocity2ptr;
+
+    unsigned char* image;
+    unsigned char* imagePtr;
+
+    float m1;
+    float m2;
+    float L1;
+    float L2;
+
+    float g;
+    float accuracy;
 };
 #endif //PNGULUM_PENDULUM_CUH
+
