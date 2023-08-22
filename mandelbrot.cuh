@@ -1,14 +1,17 @@
 #ifndef PNGULUM_MANDELBROT_CUH
 #define PNGULUM_MANDELBROT_CUH
 
+#include <string>
+
 class Mandelbrot {
+public:
     Mandelbrot(int w, int h, int iter);
     ~Mandelbrot();
     void RenderSDL();
-    void RenderFrame(float scale, float panX, float panY);
+    void RenderFrame(double scale, double panX, double panY);
     void SaveFrame();
 private:
-    void CalculateReference(double x0, double y0);
+    void CalculateReference(double x0, double y0, double scale);
 
     unsigned char* image;
     unsigned char* imageptr;
@@ -19,6 +22,8 @@ private:
 
     float* reference;
     float* referenceptr;
+
+    std::string filename;
 };
 
 

@@ -116,7 +116,7 @@ void Pendulum::RenderFrame(){
     cudaMemcpy(imageptr, image, size * size * 4, cudaMemcpyDeviceToHost);
 }
 
-void Pendulum::SaveFrame(){
+void Pendulum::SaveFrame(int i){
     auto name = "frames/frame-" + std::to_string(i) + ".png";
     fpng::fpng_encode_image_to_file(name.c_str(), image, size, size, 4);
 }

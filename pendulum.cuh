@@ -8,7 +8,7 @@ public:
     void RenderVideo(int frames);
     void RenderSDL();
     void RenderFrame();
-    void SaveFrame();
+    void SaveFrame(int i);
 private:
     int size;
 
