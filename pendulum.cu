@@ -1,8 +1,10 @@
+#include <string>
 #include "pendulum.cuh"
+#include "fpng.cuh"
 
 const float PI = 3.14159265358979323;
 
-__global__ void CalculateFrame(float* theta1, float* theta2, float* velocity1, float* velocity2, unsigned char* image, float m1, float m2, float L1, float L2, float g, float accuracy){
+__global__ void CalculateFrame(float* theta1, float* theta2, float* velocity1, float* velocity2, unsigned char* image, int size, float m1, float m2, float L1, float L2, float g, float accuracy){
     unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
     unsigned int index = y * size + x;
@@ -72,11 +74,6 @@ Pendulum::Pendulum(int sz, float lowerBound, float upperBound){
     }
 
     auto byteSize = sizeof(float) * size2;
-    float* theta1ptr;
-    float* theta2ptr;
-
-    float* velocity1ptr;
-    float* velocity2ptr;
 
     cudaMalloc((void **)&theta1ptr, byteSize);
     cudaMalloc((void **)&theta2ptr, byteSize);
@@ -84,8 +81,7 @@ Pendulum::Pendulum(int sz, float lowerBound, float upperBound){
     cudaMalloc((void **)&velocity1ptr, byteSize);
     cudaMalloc((void **)&velocity2ptr, byteSize);
 
-    cudaMalloc((void **)&imagePtr, imgSize);
-    //cudaMemcpy(imagePtr, image, size2 * 4, cudaMemcpyHostToDevice);
+    cudaMalloc((void **)&imageptr, size2 * 4);
 
     cudaMemcpy(theta1ptr, theta1, byteSize, cudaMemcpyHostToDevice);
     cudaMemcpy(theta2ptr, theta2, byteSize, cudaMemcpyHostToDevice);
@@ -101,7 +97,7 @@ Pendulum::~Pendulum() {
     cudaFree(velocity1ptr);
     cudaFree(velocity2ptr);
 
-    cudaFree(imagePtr);
+    cudaFree(imageptr);
 
     delete[] theta1;
     delete[] theta2;
@@ -112,14 +108,12 @@ Pendulum::~Pendulum() {
     delete[] image;
 }
 
-unsigned char* Pendulum::RenderFrame(){
+void Pendulum::RenderFrame(){
     dim3 threadsPerBlock(32, 32);
     dim3 numBlocks(size / threadsPerBlock.x, size / threadsPerBlock.y);
 
-    CalculateFrame<<<threadsPerBlock, numBlocks>>>(theta1ptr, theta2ptr, velocity1ptr, velocity2ptr, imagePtr, m1, m2, L1, L2, g, accuracy);
-    cudaMemcpy(imageptr, image, imgSize, cudaMemcpyDeviceToHost);
-
-    return image;
+    CalculateFrame<<<threadsPerBlock, numBlocks>>>(theta1ptr, theta2ptr, velocity1ptr, velocity2ptr, imageptr, size, m1, m2, L1, L2, g, accuracy);
+    cudaMemcpy(imageptr, image, size * size * 4, cudaMemcpyDeviceToHost);
 }
 
 void Pendulum::SaveFrame(){

@@ -7,9 +7,9 @@ public:
     ~Pendulum();
     void RenderVideo(int frames);
     void RenderSDL();
-private:
     void RenderFrame();
-
+    void SaveFrame();
+private:
     int size;
 
     float* theta1;
@@ -25,7 +25,7 @@ private:
     float* velocity2ptr;
 
     unsigned char* image;
-    unsigned char* imagePtr;
+    unsigned char* imageptr;
 
     float m1;
     float m2;
