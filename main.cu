@@ -1,8 +1,7 @@
 #include "mandelbrot.cuh"
 
-int main() {
-    Mandelbrot bratwurst(4096, 4096, 16384);
-    bratwurst.RenderFrame(1.4, -1.768667862837488812627419470, 0.001645580546820209430325900);
-    bratwurst.SaveFrame();
+int main(int argc, char* argv[]) {
+    Mandelbrot bratwurst(1080, 1080, 16384);
+    bratwurst.RenderSDL();
     return 0;
 }

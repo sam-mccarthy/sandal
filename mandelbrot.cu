@@ -21,7 +21,15 @@ __global__ void CalculateFrame(int width, int height, unsigned char* image, int 
 
     int iter = 0;
     while(x2 + y2 <= 4 && iter < maxIter){
-        float Xx = reference[iter * 2];
+        y = (x + x) * y + dy0;
+        x = x2 - y2 + dx0;
+
+        x2 = x * x;
+        y2 = y * y;
+
+        iter++;
+
+        /*float Xx = reference[iter * 2];
         float Xy = reference[iter * 2 + 1];
 
         float oldX = x;
@@ -32,7 +40,7 @@ __global__ void CalculateFrame(int width, int height, unsigned char* image, int 
         x2 = x * x;
         y2 = y * y;
 
-        iter++;
+        iter++;*/
     }
 
     float color = iter;
@@ -55,6 +63,9 @@ Mandelbrot::Mandelbrot(int w, int h, int iter) {
     width = w;
     height = h;
     maxIter = iter;
+
+    blockSize = dim3(32, 32);
+    gridSize = dim3((int)ceil((float)width / blockSize.x), (int)ceil((float)height / blockSize.y));
 
     image = new unsigned char[w * h * 4];
     cudaMalloc((void **)&imageptr, w * h * 4);
@@ -91,11 +102,8 @@ void Mandelbrot::CalculateReference(double x0, double y0, double scale) {
 }
 
 void Mandelbrot::RenderFrame(double scale, double panX, double panY){
-    dim3 threadsPerBlock(32, 32);
-    dim3 numBlocks((int)ceil((float)width / threadsPerBlock.x), (int)ceil((float)height / threadsPerBlock.y));
-
     CalculateReference(panX, panY, scale);
-    CalculateFrame<<<numBlocks, threadsPerBlock>>>(width, height, imageptr, maxIter, scale, panX, panY, referenceptr);
+    CalculateFrame<<<gridSize, blockSize>>>(width, height, imageptr, maxIter, scale, panX, panY, referenceptr);
     cudaMemcpy(image, imageptr, width * height * 4, cudaMemcpyDeviceToHost);
 
     filename = std::format("{}{}{}{}{}.png", width, height, scale, panX, panY);
@@ -109,7 +117,7 @@ void Mandelbrot::RenderSDL(){
 
     SDL_Window* window;
     SDL_Renderer* renderer;
-    SDL_CreateWindowAndRenderer(1080, 1080, 0, &window, &renderer);
+    SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer);
 
     if(window == nullptr || renderer == nullptr){
         std::cout << "Window / renderer creation error.";
@@ -117,46 +125,73 @@ void Mandelbrot::RenderSDL(){
     }
 
     SDL_Surface* surface = SDL_GetWindowSurface(window);
-    SDL_Texture* mandelTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 1080, 1080);
+    SDL_Texture* mandelTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, width, height);
 
-    SDLEventLoop();
+    SDLEventLoop(mandelTexture, renderer);
 
     SDL_FreeSurface(surface);
     SDL_DestroyWindow(window);
     SDL_Quit();
 }
 
-void Mandelbrot::SDLEventLoop(){
+void Mandelbrot::SDLEventLoop(SDL_Texture* texture, SDL_Renderer* renderer){
     bool quit = false;
 
+    double scale = 1;
+
+    double panX = 0;
+    double panY = 0;
+
+    bool change = true;
+    bool mousePressed = false;
     SDL_Event event;
-    while(!quit && SDL_WaitEvent(&event)){
-        switch(event.type){
-            case SDL_USEREVENT:
-                break;
-            case SDL_KEYDOWN:
-                if(event.key.keysym.sym == SDLK_q){
-
-                }else if(event.key.keysym.sym == SDLK_e){
-
-                }
-                break;
-            case SDL_MOUSEBUTTONDOWN:
-                if(event.key == SDL_KeyCode)
+    while(!quit){
+        if(SDL_PollEvent(&event)) {
+            switch (event.type) {
+                case SDL_KEYDOWN:
+                    if (event.key.keysym.sym == SDLK_q) {
+                        scale *= 0.9;
+                        change = true;
+                    } else if (event.key.keysym.sym == SDLK_e) {
+                        scale *= 1.1;
+                        change = true;
+                    }
                     break;
-            case SDL_MOUSEBUTTONUP:
-                break;
-            case SDL_QUIT:
-                quit = true;
-            default:
-                break;
+                case SDL_MOUSEBUTTONDOWN:
+                    mousePressed = true;
+                    break;
+                case SDL_MOUSEBUTTONUP:
+                    mousePressed = false;
+                    break;
+                case SDL_MOUSEMOTION:
+                    if (mousePressed) {
+                        panX -= (float)event.motion.xrel * 4.0f / width / scale;
+                        panY -= (float)event.motion.yrel * 4.0f / height / scale;
+                        std::cout << panX << std::endl;
+                        std::cout << panY << std::endl;
+                        change = true;
+                    }
+                    break;
+                case SDL_QUIT:
+                    quit = true;
+                    break;
+                default:
+                    break;
+            }
         }
+
+        if(change)
+            UpdateSDL(texture, renderer, scale, panX, panY);
+
+        change = false;
     }
 }
 
-void Mandelbrot::UpdateSDL(SDL_Texture* texture, SDL_Renderer* renderer){
+void Mandelbrot::UpdateSDL(SDL_Texture* texture, SDL_Renderer* renderer, double scale, double panX, double panY){
     int pitch;
     void* pixels;
+
+    RenderFrame(scale, panX, panY);
 
     SDL_LockTexture(texture, nullptr, &pixels, &pitch);
     memcpy(pixels, image, width * height * 4);

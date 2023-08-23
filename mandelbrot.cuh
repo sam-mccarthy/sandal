@@ -2,6 +2,7 @@
 #define PNGULUM_MANDELBROT_CUH
 
 #include <string>
+#include <SDL.h>
 
 class Mandelbrot {
 public:
@@ -16,6 +17,9 @@ private:
     unsigned char* image;
     unsigned char* imageptr;
 
+    dim3 blockSize;
+    dim3 gridSize;
+
     int width;
     int height;
     int maxIter;
@@ -25,9 +29,8 @@ private:
 
     std::string filename;
 
-    void UpdateSDL(SDL_Texture *texture, SDL_Renderer *renderer);
-
-    void SDLEventLoop();
+    void UpdateSDL(SDL_Texture *texture, SDL_Renderer *renderer, double scale, double panX, double panY);
+    void SDLEventLoop(SDL_Texture *texture, SDL_Renderer *renderer);
 };
 
 
