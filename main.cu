@@ -6,4 +6,3 @@ int main() {
     bratwurst.SaveFrame();
     return 0;
 }
-

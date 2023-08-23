@@ -24,6 +24,10 @@ private:
     float* referenceptr;
 
     std::string filename;
+
+    void UpdateSDL(SDL_Texture *texture, SDL_Renderer *renderer);
+
+    void SDLEventLoop();
 };
 
 

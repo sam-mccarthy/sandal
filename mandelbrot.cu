@@ -1,4 +1,6 @@
 #include <format>
+#include <SDL.h>
+#include <iostream>
 #include "mandelbrot.cuh"
 #include "fpng.cuh"
 
@@ -97,6 +99,70 @@ void Mandelbrot::RenderFrame(double scale, double panX, double panY){
     cudaMemcpy(image, imageptr, width * height * 4, cudaMemcpyDeviceToHost);
 
     filename = std::format("{}{}{}{}{}.png", width, height, scale, panX, panY);
+}
+
+void Mandelbrot::RenderSDL(){
+    if(SDL_Init(SDL_INIT_VIDEO) < 0){
+        std::cout << "SDL Init Failed.";
+        return;
+    }
+
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_CreateWindowAndRenderer(1080, 1080, 0, &window, &renderer);
+
+    if(window == nullptr || renderer == nullptr){
+        std::cout << "Window / renderer creation error.";
+        return;
+    }
+
+    SDL_Surface* surface = SDL_GetWindowSurface(window);
+    SDL_Texture* mandelTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_STREAMING, 1080, 1080);
+
+    SDLEventLoop();
+
+    SDL_FreeSurface(surface);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+}
+
+void Mandelbrot::SDLEventLoop(){
+    bool quit = false;
+
+    SDL_Event event;
+    while(!quit && SDL_WaitEvent(&event)){
+        switch(event.type){
+            case SDL_USEREVENT:
+                break;
+            case SDL_KEYDOWN:
+                if(event.key.keysym.sym == SDLK_q){
+
+                }else if(event.key.keysym.sym == SDLK_e){
+
+                }
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                if(event.key == SDL_KeyCode)
+                    break;
+            case SDL_MOUSEBUTTONUP:
+                break;
+            case SDL_QUIT:
+                quit = true;
+            default:
+                break;
+        }
+    }
+}
+
+void Mandelbrot::UpdateSDL(SDL_Texture* texture, SDL_Renderer* renderer){
+    int pitch;
+    void* pixels;
+
+    SDL_LockTexture(texture, nullptr, &pixels, &pitch);
+    memcpy(pixels, image, width * height * 4);
+    SDL_UnlockTexture(texture);
+    SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+    SDL_RenderPresent(renderer);
 }
 
 void Mandelbrot::SaveFrame(){
