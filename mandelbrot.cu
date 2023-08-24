@@ -4,7 +4,7 @@
 #include "mandelbrot.cuh"
 #include "fpng.cuh"
 
-__global__ void CalculateFrame(int width, int height, unsigned char* image, int maxIter, float scale, float panX, float panY, float* reference){
+__global__ void CalculateFrame(int width, int height, unsigned char* image, int maxIter, unsigned long long scaleNum, unsigned long long scaleDen, unsigned long long panXnum, unsigned long long panXden, float panY, float* reference){
     unsigned int px = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int py = blockIdx.y * blockDim.y + threadIdx.y;
     unsigned int index = py * width + px;
@@ -28,19 +28,6 @@ __global__ void CalculateFrame(int width, int height, unsigned char* image, int 
         y2 = y * y;
 
         iter++;
-
-        /*float Xx = reference[iter * 2];
-        float Xy = reference[iter * 2 + 1];
-
-        float oldX = x;
-
-        x = 2 * (Xx * x - Xy * y) + x2 - y2 + dx0;
-        y = 2 * (Xx * y + Xy * oldX + y * oldX) + dy0;
-
-        x2 = x * x;
-        y2 = y * y;
-
-        iter++;*/
     }
 
     float color = iter;

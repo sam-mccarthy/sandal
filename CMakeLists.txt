@@ -15,6 +15,8 @@ add_executable(sandal main.cu fpng.cu
         mandelbrot.cuh
         fractal.cuh
         pendulum.cuh
+        arbitrary.cu
+        arbitrary.cuh
 )
 
 set_target_properties(sandal PROPERTIES
