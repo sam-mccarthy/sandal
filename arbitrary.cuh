@@ -1,7 +1,3 @@
-//
-// Created by stiit on 8/23/2023.
-//
-
 #ifndef SANDAL_ARBITRARY_CUH
 #define SANDAL_ARBITRARY_CUH
 
