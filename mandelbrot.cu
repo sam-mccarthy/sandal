@@ -3,16 +3,17 @@
 #include <iostream>
 #include "mandelbrot.cuh"
 #include "fpng.cuh"
+#include "afloat.cuh"
 
-__global__ void CalculateFrame(int width, int height, unsigned char* image, int maxIter, unsigned long long scaleNum, unsigned long long scaleDen, unsigned long long panXnum, unsigned long long panXden, float panY, float* reference){
+__global__ void CalculateFrame(int width, int height, unsigned char* image, uint32_t maxIter, AFloat scale, AFloat panX, AFloat panY){
     unsigned int px = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int py = blockIdx.y * blockDim.y + threadIdx.y;
     unsigned int index = py * width + px;
 
     if(index > width * height) return;
 
-    float dx0 = ((float)px / width * 4 - 2) / scale + panX;
-    float dy0 = ((float)py / height * 4 - 2) / scale + panY;
+    float dx0 = ((double)px / width * 4 - 2) * scale + panX;
+    float dy0 = ((double)py / height * 4 - 2) * scale + panY;
 
     float x = 0;
     float y = 0;
@@ -30,19 +31,11 @@ __global__ void CalculateFrame(int width, int height, unsigned char* image, int 
         iter++;
     }
 
-    float color = iter;
-    if(iter < maxIter){
-        color++;
-
-        float log_zn = log2f(sqrt(x2 + y2));
-        color -= log2f(log_zn);
-    }
-
     unsigned int imageIndex = index * 4;
 
-    image[imageIndex + 0] = (unsigned char)(sin(color) * 127 + 128);
-    image[imageIndex + 1] = (unsigned char)(cos(color) * 127 + 128);
-    image[imageIndex + 2] = (unsigned char)(tan(color) * 127 + 128);
+    image[imageIndex + 0] = (unsigned char)(sin(iter) * 127 + 128);
+    image[imageIndex + 1] = (unsigned char)(cos(iter) * 127 + 128);
+    image[imageIndex + 2] = (unsigned char)(tan(iter) * 127 + 128);
     image[imageIndex + 3] = 255;
 }
 
@@ -59,33 +52,6 @@ Mandelbrot::Mandelbrot(int w, int h, int iter) {
     cudaMalloc((void **)&referenceptr, maxIter * 2);
 
     reference = new float[iter * 2];
-}
-
-void Mandelbrot::CalculateReference(double x0, double y0, double scale) {
-    x0 -= 2 / scale;
-    y0 -= 2 / scale;
-
-    double x = 0;
-    double y = 0;
-    double x2 = 0;
-    double y2 = 0;
-
-    int iter = 0;
-    while(x2 + y2 <= 4 && iter < maxIter)
-    {
-        reference[iter * 2] = (float)x;
-        reference[iter * 2 + 1] = (float)y;
-
-        y = (x + x) * y + y0;
-        x = x2 - y2 + x0;
-
-        x2 = x * x;
-        y2 = y * y;
-
-        iter++;
-    }
-
-    cudaMemcpy(referenceptr, reference, iter * 2, cudaMemcpyHostToDevice);
 }
 
 void Mandelbrot::RenderFrame(double scale, double panX, double panY){
@@ -183,6 +149,7 @@ void Mandelbrot::UpdateSDL(SDL_Texture* texture, SDL_Renderer* renderer, double 
     SDL_LockTexture(texture, nullptr, &pixels, &pitch);
     memcpy(pixels, image, width * height * 4);
     SDL_UnlockTexture(texture);
+
     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
 }
