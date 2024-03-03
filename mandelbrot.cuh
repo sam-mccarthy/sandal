@@ -12,8 +12,6 @@ public:
     void RenderFrame(double scale, double panX, double panY);
     void SaveFrame();
 private:
-    void CalculateReference(double x0, double y0, double scale);
-
     unsigned char* image;
     unsigned char* imageptr;
 
@@ -23,9 +21,6 @@ private:
     int width;
     int height;
     int maxIter;
-
-    float* reference;
-    float* referenceptr;
 
     std::string filename;
 

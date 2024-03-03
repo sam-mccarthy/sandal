@@ -1,11 +1,12 @@
 #include <format>
-#include <SDL.h>
 #include <iostream>
+
+#include <SDL.h>
+
 #include "mandelbrot.cuh"
 #include "fpng.cuh"
-#include "afloat.cuh"
 
-__global__ void CalculateFrame(int width, int height, unsigned char* image, uint32_t maxIter, AFloat scale, AFloat panX, AFloat panY){
+__global__ void CalculateFrame(int width, int height, unsigned char* image, uint32_t maxIter, double scale, double panX, double panY){
     unsigned int px = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int py = blockIdx.y * blockDim.y + threadIdx.y;
     unsigned int index = py * width + px;
@@ -33,9 +34,9 @@ __global__ void CalculateFrame(int width, int height, unsigned char* image, uint
 
     unsigned int imageIndex = index * 4;
 
-    image[imageIndex + 0] = (unsigned char)(sin(iter) * 127 + 128);
-    image[imageIndex + 1] = (unsigned char)(cos(iter) * 127 + 128);
-    image[imageIndex + 2] = (unsigned char)(tan(iter) * 127 + 128);
+    image[imageIndex + 0] = (unsigned char)(sin((double)iter) * 127 + 128);
+    image[imageIndex + 1] = (unsigned char)(cos((double)iter) * 127 + 128);
+    image[imageIndex + 2] = (unsigned char)(tan((double)iter) * 127 + 128);
     image[imageIndex + 3] = 255;
 }
 
@@ -49,14 +50,10 @@ Mandelbrot::Mandelbrot(int w, int h, int iter) {
 
     image = new unsigned char[w * h * 4];
     cudaMalloc((void **)&imageptr, w * h * 4);
-    cudaMalloc((void **)&referenceptr, maxIter * 2);
-
-    reference = new float[iter * 2];
 }
 
 void Mandelbrot::RenderFrame(double scale, double panX, double panY){
-    CalculateReference(panX, panY, scale);
-    CalculateFrame<<<gridSize, blockSize>>>(width, height, imageptr, maxIter, scale, panX, panY, referenceptr);
+    CalculateFrame<<<gridSize, blockSize>>>(width, height, imageptr, maxIter, scale, panX, panY);
     cudaMemcpy(image, imageptr, width * height * 4, cudaMemcpyDeviceToHost);
 
     filename = std::format("{}{}{}{}{}.png", width, height, scale, panX, panY);
@@ -162,5 +159,4 @@ Mandelbrot::~Mandelbrot(){
     cudaFree(imageptr);
 
     delete[] image;
-    delete[] reference;
 }

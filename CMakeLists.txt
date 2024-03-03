@@ -3,7 +3,7 @@ project(sandal CUDA)
 
 set(CMAKE_CUDA_STANDARD 23)
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:CONSOLE")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
 set(CMAKE_CXX_FLAGS_DEBUG  "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
@@ -15,10 +15,6 @@ add_executable(sandal main.cu fpng.cu
         mandelbrot.cuh
         fractal.cuh
         pendulum.cuh
-        aint.cu
-        aint.cuh
-        afloat.cu
-        afloat.cuh
 )
 
 set_target_properties(sandal PROPERTIES
