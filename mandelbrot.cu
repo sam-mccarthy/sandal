@@ -115,8 +115,8 @@ void Mandelbrot::SDLEventLoop(SDL_Texture* texture, SDL_Renderer* renderer){
                     break;
                 case SDL_MOUSEMOTION:
                     if (mousePressed) {
-                        panX -= (float)event.motion.xrel * 4.0f / width / scale;
-                        panY -= (float)event.motion.yrel * 4.0f / height / scale;
+                        panX -= (float)event.motion.xrel / width / (scale / 4.0);
+                        panY -= (float)event.motion.yrel / height / (scale / 4.0);
                         std::cout << panX << std::endl;
                         std::cout << panY << std::endl;
                         change = true;
